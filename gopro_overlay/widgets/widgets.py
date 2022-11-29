@@ -1,7 +1,7 @@
 import functools
 import importlib
-import os
 import math
+import os
 from typing import Tuple, Any
 
 from PIL import Image, ImageDraw
@@ -179,23 +179,23 @@ class Frame:
                 self._init_fadeout()
 
     def _init_fadeout(self):
-            for y in range(self.dimensions.y):
-                for x in range(self.dimensions.x):
-                    distance_to_center = math.sqrt((x - self.dimensions.x/2) ** 2 + (y - self.dimensions.y/2) ** 2)
-                    radius = min(self.dimensions.x, self.dimensions.y) / 2
-                    distance_from_side = 1 - (distance_to_center / radius)
-                    distance_from_side = min(x, min(y, min(self.dimensions.x - x, self.dimensions.y - y))) / radius
-                    if self.corner_radius == 0:
-                        # no radius defined, we will use distance_from_side
-                        distance_from_corner_radius = distance_from_side
-                    else:
-                        # we can use a more complex formula for getting the distance from corner_radius, but for simplicity we will use this one
-                        # it will lead to more straight lines instead of rounded corners
-                        outer_radius = math.sqrt(self.corner_radius ** 2 + self.corner_radius ** 2) - self.corner_radius
-                        rounder_radius = math.sqrt((self.dimensions.x/2) ** 2 + (self.dimensions.y/2) ** 2) - outer_radius
-                        distance_from_corner_radius = (rounder_radius - distance_to_center) / rounder_radius
-                    fade_out_percents = max(0.01, min(1, self.fade_out / radius))
-                    self.mask.putpixel((x, y), int(min(1, min(distance_from_side, distance_from_corner_radius) / fade_out_percents) * 255 * self.opacity))
+        for y in range(self.dimensions.y):
+            for x in range(self.dimensions.x):
+                distance_to_center = math.sqrt((x - self.dimensions.x / 2) ** 2 + (y - self.dimensions.y / 2) ** 2)
+                radius = min(self.dimensions.x, self.dimensions.y) / 2
+                distance_from_side = 1 - (distance_to_center / radius)
+                distance_from_side = min(x, min(y, min(self.dimensions.x - x, self.dimensions.y - y))) / radius
+                if self.corner_radius == 0:
+                    # no radius defined, we will use distance_from_side
+                    distance_from_corner_radius = distance_from_side
+                else:
+                    # we can use a more complex formula for getting the distance from corner_radius, but for simplicity we will use this one
+                    # it will lead to more straight lines instead of rounded corners
+                    outer_radius = math.sqrt(self.corner_radius ** 2 + self.corner_radius ** 2) - self.corner_radius
+                    rounder_radius = math.sqrt((self.dimensions.x / 2) ** 2 + (self.dimensions.y / 2) ** 2) - outer_radius
+                    distance_from_corner_radius = (rounder_radius - distance_to_center) / rounder_radius
+                fade_out_percents = max(0.01, min(1, self.fade_out / radius))
+                self.mask.putpixel((x, y), int(min(1, min(distance_from_side, distance_from_corner_radius) / fade_out_percents) * 255 * self.opacity))
 
     def draw(self, image, draw):
         self._maybe_init()
@@ -217,17 +217,22 @@ class Frame:
         image.alpha_composite(rect, (0, 0))
 
 
-class Scene:
+class ImageProvider:
 
-    def __init__(self, dimensions: Dimension, widgets, ):
-        self._widgets = widgets
+    def __init__(self, dimensions: Dimension):
         self._dimensions = dimensions
 
-    def draw(self):
-        image = Image.new("RGBA", (self._dimensions.x, self._dimensions.y), (0, 0, 0, 0))
+    def provide(self):
+        return Image.new("RGBA", (self._dimensions.x, self._dimensions.y), (0, 0, 0, 0))
+
+
+class Scene:
+
+    def __init__(self, widgets):
+        self._widgets = widgets
+
+    def draw(self, image: Image):
         draw = ImageDraw.Draw(image)
 
         for w in self._widgets:
             w.draw(image, draw)
-
-        return image

@@ -27,6 +27,7 @@ from gopro_overlay.timeunits import timeunits
 from gopro_overlay.timing import PoorTimer
 from gopro_overlay.units import units
 from gopro_overlay.widgets.profile import WidgetProfiler
+from gopro_overlay.widgets.widgets import ImageProvider
 
 ourdir = Path.home().joinpath(".gopro-graphics")
 
@@ -232,8 +233,9 @@ if __name__ == "__main__":
                 max_value=len(stepper)
             )
 
+            image_provider = ImageProvider(dimensions=dimensions)
+
             overlay = Overlay(
-                dimensions=dimensions,
                 framemeta=frame_meta,
                 create_widgets=create_desired_layout(
                     layout=args.layout, layout_xml=args.layout_xml,
@@ -246,8 +248,9 @@ if __name__ == "__main__":
                 with ffmpeg.generate() as writer:
                     for index, dt in enumerate(stepper.steps()):
                         progress.update(index)
-                        frame = draw_timer.time(lambda: overlay.draw(dt))
-                        tobytes = byte_timer.time(lambda: frame.tobytes())
+                        image = image_provider.provide()
+                        frame = draw_timer.time(lambda: overlay.draw(image=image, pts=dt))
+                        tobytes = byte_timer.time(lambda: image.tobytes())
                         write_timer.time(lambda: writer.write(tobytes))
                 print("Finished drawing frames. waiting for ffmpeg to catch up")
                 progress.finish()
