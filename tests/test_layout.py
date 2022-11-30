@@ -7,7 +7,7 @@ from PIL import Image
 from gopro_overlay import fake
 from gopro_overlay.dimensions import Dimension
 from gopro_overlay.font import load_font
-from gopro_overlay.frame import OriginalFrameProvider
+from gopro_overlay.frame import SimpleFrameProvider, DirectFrameProvider
 from gopro_overlay.geo import CachingRenderer
 from gopro_overlay.layout import Overlay, speed_awareness_layout
 from gopro_overlay.layout_xml import layout_from_xml, load_xml_layout
@@ -124,7 +124,7 @@ def test_render_xml_component_with_exclusions():
 def time_layout(name, layout, repeat=20, dimensions=Dimension(1920, 1080)) -> Image:
     overlay = Overlay(framemeta=framemeta, create_widgets=layout)
 
-    framer = OriginalFrameProvider(dimensions=dimensions)
+    framer = DirectFrameProvider(dimensions=dimensions)
 
     timer = PoorTimer(name)
     copy = None

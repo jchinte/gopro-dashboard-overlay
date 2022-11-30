@@ -109,6 +109,11 @@ def test_font():
     assert do_args("--font", "Bob.ttf").font == "Bob.ttf"
 
 
+def test_frames():
+    assert do_args().frames == "simple"
+    assert do_args("--frames", "direct").frames == "direct"
+
+
 def test_include():
     assert do_args().include is None
     assert do_args("--include", "something").include == ["something"]

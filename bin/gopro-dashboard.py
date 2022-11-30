@@ -15,7 +15,7 @@ from gopro_overlay.ffmpeg import FFMPEGOverlayVideo, FFMPEGOverlay, ffmpeg_is_in
     find_streams, FFMPEGNull
 from gopro_overlay.ffmpeg_profile import load_ffmpeg_profile
 from gopro_overlay.font import load_font
-from gopro_overlay.frame import OriginalFrameProvider, SimpleFrameWriter
+from gopro_overlay.frame import SimpleFrameProvider, SimpleFrameWriter, DirectFrameProvider, DirectFrameWriter, NullFrameWriter
 from gopro_overlay.framemeta import framemeta_from
 from gopro_overlay.framemeta_gpx import merge_gpx_with_gopro, timeseries_to_framemeta
 from gopro_overlay.geo import CachingRenderer, CompositeKeyFinder, ArgsKeyFinder, EnvKeyFinder, ConfigKeyFinder
@@ -241,10 +241,18 @@ if __name__ == "__main__":
             )
 
             try:
-                framer = OriginalFrameProvider(dimensions=dimensions)
-
                 with ffmpeg.generate() as fd:
-                    writer = SimpleFrameWriter(fd)
+
+                    if args.frames == "simple":
+                        framer = SimpleFrameProvider(dimensions=dimensions)
+                        writer = SimpleFrameWriter(fd)
+                    elif args.frames == "direct":
+                        framer = DirectFrameProvider(dimensions=dimensions)
+                        writer = DirectFrameWriter(fd)
+                    elif args.frames == "null":
+                        framer = SimpleFrameProvider(dimensions=dimensions)
+                        writer = NullFrameWriter()
+
                     for index, dt in enumerate(stepper.steps()):
                         progress.update(index)
                         with framer.provide() as frame:

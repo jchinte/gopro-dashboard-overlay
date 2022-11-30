@@ -5,7 +5,7 @@ from PIL import ImageFont, Image
 
 from gopro_overlay import fake
 from gopro_overlay.dimensions import Dimension
-from gopro_overlay.frame import OriginalFrameProvider
+from gopro_overlay.frame import SimpleFrameProvider
 from gopro_overlay.layout import BigMetric, gps_info
 from gopro_overlay.layout_components import text, metric
 from gopro_overlay.point import Coordinate
@@ -247,7 +247,7 @@ def test_frame_fade_cr_non_zero():
 def time_rendering(name, widgets, dimensions: Dimension = Dimension(x=600, y=300), repeat=100) -> Image:
     timer = PoorTimer(name)
 
-    framer = OriginalFrameProvider(dimensions=dimensions)
+    framer = SimpleFrameProvider(dimensions=dimensions)
 
     scene = Scene(widgets)
     copy = None

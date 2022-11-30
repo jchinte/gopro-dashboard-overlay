@@ -2,7 +2,7 @@ from gopro_overlay.common import temporary_file
 from gopro_overlay.dimensions import Dimension
 from gopro_overlay.ffmpeg import FFMPEGOverlay
 from gopro_overlay.font import load_font
-from gopro_overlay.frame import OriginalFrameProvider, SimpleFrameWriter
+from gopro_overlay.frame import SimpleFrameProvider, SimpleFrameWriter
 from gopro_overlay.point import Coordinate
 from gopro_overlay.widgets.widgets import Scene
 from gopro_overlay.widgets.text import CachingText
@@ -26,7 +26,7 @@ def test_overlay_only():
             count[0] += 1
             return str(count[0])
 
-        framer = OriginalFrameProvider(dimensions=dimension)
+        framer = SimpleFrameProvider(dimensions=dimension)
 
         scene = Scene(widgets=[
             CachingText(at=Coordinate(800, 400), value=nextval, font=font.font_variant(size=160))

@@ -51,6 +51,8 @@ def gopro_dashboard_arguments(args=None):
     debugging.add_argument("--show-ffmpeg", action="store_true", help="Show FFMPEG output (not usually useful)")
     debugging.add_argument("--debug-metadata", action="store_true", default=False, help="Show detailed information when parsing GoPro Metadata")
     debugging.add_argument("--profiler", action="store_true", help="Do some basic profiling of the widgets to find ones that may be slow")
+    debugging.add_argument("--frames", choices=["simple", "direct", "null"], default="simple", help="HIGHLY EXPERIMENTAL: Schemes for creating and rendering image frames")
+
     args = parser.parse_args(args)
 
     def quit(reason):

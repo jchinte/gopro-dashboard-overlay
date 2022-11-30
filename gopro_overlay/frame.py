@@ -1,7 +1,7 @@
 import contextlib
 import ctypes
 import dataclasses
-from typing import IO, AnyStr
+from typing import IO, AnyStr, Any
 
 from PIL import Image, ImageDraw
 
@@ -11,6 +11,11 @@ from gopro_overlay.dimensions import Dimension
 @dataclasses.dataclass(frozen=True)
 class Frame:
     image: Image
+
+
+@dataclasses.dataclass(frozen=True)
+class DirectFrame(Frame):
+    buffer: Any
 
 
 class NullFrameWriter:
@@ -26,6 +31,14 @@ class SimpleFrameWriter:
         self._fd.write(frame.image.tobytes())
 
 
+class DirectFrameWriter:
+    def __init__(self, fd: IO[AnyStr]):
+        self._fd = fd
+
+    def write(self, frame: DirectFrame):
+        self._fd.write(frame.buffer)
+
+
 class DirectFrameProvider:
 
     def __init__(self, dimensions: Dimension):
@@ -37,9 +50,9 @@ class DirectFrameProvider:
         self._draw = ImageDraw.Draw(self._image)
 
     @contextlib.contextmanager
-    def provide(self) -> Frame:
+    def provide(self) -> DirectFrame:
         try:
-            yield Frame(image=self._image)
+            yield DirectFrame(image=self._image, buffer=self._buffer)
         finally:
             self.clear()
 
@@ -47,7 +60,7 @@ class DirectFrameProvider:
         ctypes.memset(ctypes.byref(self._buffer), 0x00, self._buffer_size)
 
 
-class OriginalFrameProvider:
+class SimpleFrameProvider:
     def __init__(self, dimensions: Dimension):
         self._dimensions = dimensions
 
