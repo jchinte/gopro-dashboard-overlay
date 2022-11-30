@@ -10,11 +10,12 @@ from gopro_overlay import timeseries_process, progress_frames, gpx, fit
 from gopro_overlay.arguments import gopro_dashboard_arguments
 from gopro_overlay.common import temp_file_name
 from gopro_overlay.dimensions import dimension_from
-from gopro_overlay.execution import InProcessExecution, ThreadingExecution
+from gopro_overlay.execution import InProcessExecution
 from gopro_overlay.ffmpeg import FFMPEGOverlayVideo, FFMPEGOverlay, ffmpeg_is_installed, ffmpeg_libx264_is_installed, \
     find_streams, FFMPEGNull
 from gopro_overlay.ffmpeg_profile import load_ffmpeg_profile
 from gopro_overlay.font import load_font
+from gopro_overlay.frame import OriginalFrameProvider, SimpleFrameWriter
 from gopro_overlay.framemeta import framemeta_from
 from gopro_overlay.framemeta_gpx import merge_gpx_with_gopro, timeseries_to_framemeta
 from gopro_overlay.geo import CachingRenderer, CompositeKeyFinder, ArgsKeyFinder, EnvKeyFinder, ConfigKeyFinder
@@ -24,10 +25,9 @@ from gopro_overlay.point import Point
 from gopro_overlay.privacy import PrivacyZone, NoPrivacyZone
 from gopro_overlay.timeseries import Timeseries
 from gopro_overlay.timeunits import timeunits
-from gopro_overlay.timing import PoorTimer
+from gopro_overlay.timing import PoorTimer, Timers
 from gopro_overlay.units import units
 from gopro_overlay.widgets.profile import WidgetProfiler
-from gopro_overlay.widgets.widgets import ImageProvider
 
 ourdir = Path.home().joinpath(".gopro-graphics")
 
@@ -185,8 +185,10 @@ if __name__ == "__main__":
 
         with CachingRenderer(style=args.map_style, api_key_finder=api_key_finder).open() as renderer:
 
+            timers = Timers()
+
             if args.profiler:
-                profiler = WidgetProfiler()
+                profiler = WidgetProfiler(timers)
             else:
                 profiler = None
 
@@ -201,10 +203,7 @@ if __name__ == "__main__":
                 redirect = temp_file_name()
                 print(f"FFMPEG Output is in {redirect}")
 
-            if args.thread:
-                execution = ThreadingExecution(redirect=redirect)
-            else:
-                execution = InProcessExecution(redirect=redirect)
+            execution = InProcessExecution(redirect=redirect)
 
             if generate == "none":
                 ffmpeg = FFMPEGNull()
@@ -213,9 +212,8 @@ if __name__ == "__main__":
             else:
                 ffmpeg = FFMPEGOverlayVideo(input=inputpath, output=args.output, options=ffmpeg_options, vsize=args.output_size, overlay_size=dimensions, execution=execution)
 
-            write_timer = PoorTimer("writing to ffmpeg")
-            byte_timer = PoorTimer("image to bytes")
-            draw_timer = PoorTimer("drawing frames")
+            write_timer = timers.timer("writing to ffmpeg")
+            draw_timer = timers.timer("drawing frames")
 
             # Draw an overlay frame every 0.1 seconds of video
             timelapse_correction = frame_meta.duration() / video_duration
@@ -233,8 +231,6 @@ if __name__ == "__main__":
                 max_value=len(stepper)
             )
 
-            image_provider = ImageProvider(dimensions=dimensions)
-
             overlay = Overlay(
                 framemeta=frame_meta,
                 create_widgets=create_desired_layout(
@@ -245,13 +241,15 @@ if __name__ == "__main__":
             )
 
             try:
-                with ffmpeg.generate() as writer:
+                frame_provider = OriginalFrameProvider(dimensions=dimensions)
+
+                with ffmpeg.generate() as fd:
+                    writer = SimpleFrameWriter(fd)
                     for index, dt in enumerate(stepper.steps()):
                         progress.update(index)
-                        image = image_provider.provide()
-                        frame = draw_timer.time(lambda: overlay.draw(image=image, pts=dt))
-                        tobytes = byte_timer.time(lambda: image.tobytes())
-                        write_timer.time(lambda: writer.write(tobytes))
+                        with frame_provider.provide() as frame:
+                            draw_timer.time(lambda: overlay.draw(frame=frame, pts=dt))
+                            write_timer.time(lambda: writer.write(frame))
                 print("Finished drawing frames. waiting for ffmpeg to catch up")
                 progress.finish()
 
@@ -259,10 +257,4 @@ if __name__ == "__main__":
                 print("...Stopping...")
                 pass
             finally:
-                for t in [byte_timer, write_timer, draw_timer]:
-                    print(t)
-
-                if profiler:
-                    print("\n\n*** Widget Timings ***")
-                    profiler.print()
-                    print("***\n\n")
+                timers.print()

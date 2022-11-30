@@ -1,3 +1,5 @@
+import contextlib
+import ctypes
 import functools
 import importlib
 import math
@@ -217,15 +219,6 @@ class Frame:
         image.alpha_composite(rect, (0, 0))
 
 
-class ImageProvider:
-
-    def __init__(self, dimensions: Dimension):
-        self._dimensions = dimensions
-
-    def provide(self):
-        return Image.new("RGBA", (self._dimensions.x, self._dimensions.y), (0, 0, 0, 0))
-
-
 class Scene:
 
     def __init__(self, widgets):
@@ -236,3 +229,5 @@ class Scene:
 
         for w in self._widgets:
             w.draw(image, draw)
+
+

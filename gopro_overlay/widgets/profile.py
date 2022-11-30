@@ -5,9 +5,9 @@ from gopro_overlay.timing import PoorTimer
 
 class ProfiledWidget:
 
-    def __init__(self, name: str, level: int, widget: Any):
+    def __init__(self, widget: Any, timer: PoorTimer):
         self.widget = widget
-        self.timer = PoorTimer(name, level)
+        self.timer = timer
 
     def draw(self, image, draw):
         with self.timer.timing(doprint=False):
@@ -16,16 +16,13 @@ class ProfiledWidget:
 
 class WidgetProfiler:
 
-    def __init__(self):
+    def __init__(self, timers):
         self.widgets = []
+        self.timers = timers
 
     def decorate(self, name: str, level: int, widget: Any):
-        widget = ProfiledWidget(name, level, widget)
+        widget = ProfiledWidget(widget, self.timers.timer(name, level))
 
         self.widgets.append(widget)
 
         return widget
-
-    def print(self):
-        for widget in reversed(self.widgets):
-            print(widget.timer)

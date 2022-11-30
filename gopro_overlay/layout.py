@@ -3,6 +3,7 @@ from typing import Callable
 from PIL import ImageFont, Image
 
 from gopro_overlay.widgets.info import ComparativeEnergy
+from .frame import Frame
 from .framemeta import FrameMeta
 from .layout_components import moving_map
 from .point import Coordinate
@@ -100,6 +101,6 @@ class Overlay:
     def entry(self):
         return self._entry
 
-    def draw(self, image: Image, pts):
+    def draw(self, frame: Frame, pts):
         self._entry = self.framemeta.get(pts)
-        self.scene.draw(image)
+        self.scene.draw(frame.image)

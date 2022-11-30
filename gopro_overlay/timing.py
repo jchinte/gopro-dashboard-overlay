@@ -2,6 +2,20 @@ import contextlib
 import time
 
 
+class Timers:
+    def __init__(self):
+        self.timers = []
+
+    def timer(self, name, indent=0):
+        timer = PoorTimer(name, indent)
+        self.timers.append(timer)
+        return timer
+
+    def print(self):
+        for t in reversed(self.timers):
+            print(t)
+
+
 class PoorTimer:
 
     def __init__(self, name, indent=0):
@@ -47,5 +61,5 @@ class PoorTimer:
         return 1 / a
 
     def __str__(self):
-        return f"{ ' ' * 4 * self.indent }Timer({self.name} - Called: {self.count:,.0f}, Total: {self.seconds:.5f}, " \
+        return f"{' ' * 4 * self.indent}Timer({self.name} - Called: {self.count:,.0f}, Total: {self.seconds:.5f}, " \
                f"Avg: {self.avg:.5f}, Rate: {self.rate:,.2f})"
