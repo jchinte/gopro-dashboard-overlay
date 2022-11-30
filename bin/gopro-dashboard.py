@@ -241,13 +241,13 @@ if __name__ == "__main__":
             )
 
             try:
-                frame_provider = OriginalFrameProvider(dimensions=dimensions)
+                framer = OriginalFrameProvider(dimensions=dimensions)
 
                 with ffmpeg.generate() as fd:
                     writer = SimpleFrameWriter(fd)
                     for index, dt in enumerate(stepper.steps()):
                         progress.update(index)
-                        with frame_provider.provide() as frame:
+                        with framer.provide() as frame:
                             draw_timer.time(lambda: overlay.draw(frame=frame, pts=dt))
                             write_timer.time(lambda: writer.write(frame))
                 print("Finished drawing frames. waiting for ffmpeg to catch up")
