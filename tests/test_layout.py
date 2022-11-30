@@ -127,15 +127,17 @@ def time_layout(name, layout, repeat=20, dimensions=Dimension(1920, 1080)) -> Im
     framer = OriginalFrameProvider(dimensions=dimensions)
 
     timer = PoorTimer(name)
-
+    copy = None
     try:
-        with framer.provide() as frame:
-            for i in range(0, repeat):
-                    timer.time(lambda: overlay.draw(frame, framemeta.min))
+        for i in range(0, repeat):
+            with framer.provide() as frame:
+                timer.time(lambda: overlay.draw(frame, framemeta.min))
+                if i == 0:
+                    copy = frame.image.copy()
 
-            if not is_make():
-                frame.image.show()
+        if not is_make():
+            copy.show()
 
-            return frame.image.copy()
+        return copy
     finally:
         print(timer)

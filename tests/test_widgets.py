@@ -250,15 +250,17 @@ def time_rendering(name, widgets, dimensions: Dimension = Dimension(x=600, y=300
     framer = OriginalFrameProvider(dimensions=dimensions)
 
     scene = Scene(widgets)
+    copy = None
     try:
-        with framer.provide() as frame:
-            for i in range(0, repeat):
+        for i in range(0, repeat):
+            with framer.provide() as frame:
                 timer.time(lambda: scene.draw(frame.image))
-
-            if not is_make():
-                frame.image.show()
-
-            return frame.image.copy()
-
+                if i == 0:
+                    copy = frame.image.copy()
     finally:
         print(timer)
+
+    if not is_make():
+        copy.show()
+
+    return copy
