@@ -53,7 +53,4 @@ class OriginalFrameProvider:
 
     @contextlib.contextmanager
     def provide(self) -> Frame:
-        image = Image.new("RGBA", (self._dimensions.x, self._dimensions.y), (0, 0, 0, 0))
-        yield Frame(
-            image=image
-        )
+        yield Frame(image=Image.new("RGBA", (self._dimensions.x, self._dimensions.y), (0, 0, 0, 0)))
