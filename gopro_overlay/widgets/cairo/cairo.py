@@ -9,7 +9,17 @@ from gopro_overlay.dimensions import Dimension
 from gopro_overlay.exceptions import Defect
 
 
-class CairoCache:
+class CairoWidget:
+    def draw(self, context: cairo.Context):
+        raise NotImplemented("Override me")
+
+
+class NullCairoWidget(CairoWidget):
+    def draw(self, context: cairo.Context):
+        pass
+
+
+class CairoCache(CairoWidget):
     def __init__(self):
         self.surface = None
 
@@ -48,12 +58,12 @@ def to_pillow(surface: cairo.ImageSurface) -> Image:
         return Image.frombuffer("RGBA", size, memory.tobytes(), 'raw', "BGRa", stride)
 
 
-class CairoWidget:
+class CairoWidgetAdapter:
 
-    def __init__(self, size: Dimension, rotation=0, widgets=None):
+    def __init__(self, size: Dimension, rotation=0, widget: CairoWidget = NullCairoWidget()):
         self.size = size
         self.rotation = rotation
-        self.widgets = [] if widgets is None else widgets
+        self.widget = widget
 
     def draw(self, image: Image, draw: ImageDraw):
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.size.x, self.size.y)
@@ -70,8 +80,7 @@ class CairoWidget:
             if scale > 1.0:
                 ctx.scale(1 / scale, 1 / scale)
 
-        for widget in self.widgets:
-            widget.draw(ctx)
+        self.widget.draw(ctx)
 
         image.alpha_composite(to_pillow(surface), (0, 0))
 

@@ -1,6 +1,6 @@
 from .dimensions import Dimension
 from .layout_xml import iattrib, rgbattr, fattrib
-from .widgets.cairo.cairo import CairoWidget
+from .widgets.cairo.cairo import CairoWidgetAdapter
 from .widgets.cairo.circuit import CairoCircuit
 from .widgets.cairo.circuit import Line
 
@@ -9,7 +9,7 @@ def create_cairo_circuit_map(element, entry, privacy, renderer, timeseries, **kw
     size = iattrib(element, "size", d=256)
     rotation = iattrib(element, "rotate", d=0)
 
-    return CairoWidget(
+    return CairoWidgetAdapter(
         size=Dimension(size, size),
         rotation=rotation,
         widgets=[
